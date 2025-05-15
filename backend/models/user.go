@@ -1,10 +1,14 @@
 package models
 
-import "gorm.io/gorm"
+import (
+	"gorm.io/datatypes"
+	"gorm.io/gorm"
+)
 
 // User はEthereumアドレスで識別されるユーザー情報です。
 type User struct {
 	gorm.Model
-	Address string `gorm:"uniqueIndex;not null" json:"address"`
-	// その他の情報（例：ニックネーム、公開鍵など）を追加可能
+	Address string `gorm:"uniqueIndex;not null" json:"address"` // ユーザーアドレス
+	Pubkey string  `gorm:"not null" json:"pubkey"` // paillier公開鍵
+	MultiSigs datatypes.JSON `gorm:"type:jsonb" json:"multisigs"` // 参加マルチシグアドレスリスト
 }
