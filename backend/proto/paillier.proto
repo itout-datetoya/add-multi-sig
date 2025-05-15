@@ -1,0 +1,23 @@
+syntax = "proto3";
+package paillier;
+
+option go_package = "/paillierpb";
+
+// 公開鍵
+message PublicKey {
+  bytes n = 1;
+  bytes n_square = 2;
+  bytes g = 3;
+}
+
+// 秘密鍵
+message PrivateKey {
+  PublicKey public_key = 1;
+  bytes lambda = 2;
+  bytes mu = 3;
+}
+
+// 暗号文
+message Ciphertext {
+  bytes c = 1;
+}
