@@ -1,6 +1,7 @@
 package db
 
 import (
+	"os"
 	"fmt"
 	"log"
 
@@ -14,8 +15,7 @@ var DB *gorm.DB
 
 // InitDB はPostgreSQLへの接続を確立し、必要なテーブルを自動マイグレーションします。
 func InitDB() {
-	// DSNは環境に合わせて変更してください。
-	dsn := "host=localhost user=postgres password=postgres dbname=multisigservice port=5432 sslmode=disable TimeZone=Asia/Tokyo"
+	dsn := os.Getenv("DSN")
 	var err error
 	DB, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
