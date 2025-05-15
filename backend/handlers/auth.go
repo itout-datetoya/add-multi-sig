@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"crypto/ecdsa"
 	"crypto/rand"
 	"encoding/hex"
 	"fmt"
@@ -11,6 +10,7 @@ import (
 
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/gin-gonic/gin"
+
 	"multisigservice/db"
 	"multisigservice/models"
 )
