@@ -18,6 +18,7 @@ func main() {
 		// 認証関連エンドポイント
 		api.GET("/auth/challenge", handlers.ChallengeHandler)
 		api.POST("/auth/login", handlers.LoginHandler)
+		api.POST("/auth/registerPubkey", handlers.RegisterPubkeyHandler)
 
 		// マルチシグ関連エンドポイント
 		api.POST("/multisig/create", handlers.CreateMultiSigHandler)
