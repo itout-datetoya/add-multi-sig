@@ -94,6 +94,54 @@ func LoginHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"success": true, "message": "Logged in", "address": req.Address})
 }
 
+// RegisterPubkeyRequest はPaillier公開鍵登録時のリクエストデータです。
+type RegisterPubkeyRequest struct {
+	Address   string `json:"address"`
+	Pubkey    string `json:"pubkey"`
+	Signature string `json:"signature"`
+}
+
+// RegisterPubkeyHandler はチャレンジ署名方式により署名検証を行い、ユーザーのPaillier公開鍵をDBに登録します。
+func RegisterPubkeyHandler(c *gin.Context) {
+	var req RegisterPubkeyRequest
+	if err := c.ShouldBindJSON(&req); err != nil || req.Address == "" || req.Signature == "" || req.Pubkey == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"success": false, "message": "Invalid request"})
+		return
+	}
+
+	// ストアからチャレンジを取得
+	challengeStore.RLock()
+	challenge, exists := challengeStore.m[strings.ToLower(req.Address)]
+	challengeStore.RUnlock()
+
+	if !exists {
+		c.JSON(http.StatusBadRequest, gin.H{"success": false, "message": "No challenge found for address"})
+		return
+	}
+
+	// 署名検証
+	valid, err := verifySignature(challenge + req.Pubkey, req.Signature, req.Address)
+	if err != nil || !valid {
+		c.JSON(http.StatusUnauthorized, gin.H{"success": false, "message": "Signature verification failed"})
+		return
+	}
+
+	// 認証成功の場合、ユーザーをDBに登録（既存の場合は更新）
+	user := models.User{Address: req.Address, Pubkey: req.Pubkey}
+	// GORMのSaveはプライマリキーに基づいて更新・作成を行う
+	if err := db.DB.Save(&user).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"success": false, "message": "Database error"})
+		return
+	}
+
+	// 使用済みチャレンジを削除
+	challengeStore.Lock()
+	delete(challengeStore.m, strings.ToLower(req.Address))
+	challengeStore.Unlock()
+
+	c.JSON(http.StatusOK, gin.H{"success": true, "message": "Register Paillier Pubkey", "address": req.Address})
+}
+
 // verifySignature は、チャレンジメッセージと署名から署名者のアドレスが一致するか検証します。
 // Ethereumのpersonal_signでは、メッセージの先頭に定型文字列が付加されます。
 func verifySignature(message, signatureHex, expectedAddress string) (bool, error) {
